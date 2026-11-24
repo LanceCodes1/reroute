@@ -28,6 +28,12 @@
 ## Commits and logs
 - Commit and push at milestones with clear messages.
 - Add a docs/prompt-log.md entry at each milestone.
+- Core logic (formatPay, programOutcomes, comparePrograms, Ari contract, role checks):
+  commit after each red→green cycle — one commit per function with its tests.
+- Before anything risky (schema change, migration, big refactor): commit first.
+- UI: one commit per working screen.
+- main must always build and pass tests: every push deploys live.
+- At each natural commit point, stop and propose the commit message; don't wait to be asked.
 
 ## Before deploy
 npx tsc --noEmit → npm test → npm run build → check the live URL.
