@@ -2,6 +2,7 @@
 
 @AGENTS.md
 @docs/planning.md
+@docs/scope.md
 
 ## How we work
 - Lance is the human in the loop: propose, explain tradeoffs, recommend. Lance decides.
