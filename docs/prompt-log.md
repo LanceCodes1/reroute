@@ -42,4 +42,4 @@ Milestone entries: what was asked, what was done, and what was verified.
 
 **Known and left alone:** 4 moderate `minimatch` findings (GHSA-g3hv-75wg-m249) under `shadcn` → `ts-morph`. Tooling-only; the only npm fix is a breaking `shadcn` downgrade. Revisit when shadcn updates. Re-check the `effect` override when Prisma ships a release that bumps it.
 
-**Still to do for S3:** set `DATABASE_URL` in Vercel project settings, deploy, check the live URL.
+**Deployed:** Live at https://reroute-puce.vercel.app. `DATABASE_URL` is set in Vercel as a sensitive variable for Production and Preview.
