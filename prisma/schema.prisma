@@ -11,3 +11,97 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum PayType {
+  hourly
+  per_period
+  total
+  milestone
+  non_cash
+  not_specified
+}
+
+enum PayPeriod {
+  week
+  two_weeks
+  month
+}
+
+enum ConditionsStatus {
+  confirmed
+  reported
+  unknown
+}
+
+enum ProgramStatus {
+  active
+  retired
+}
+
+enum JobOutcome {
+  yes
+  no
+  unknown
+}
+
+enum ReportStatus {
+  pending
+  approved
+  rejected
+}
+
+enum Verification {
+  self_reported
+  navigator_verified
+  org_confirmed
+}
+
+model Program {
+  id               String  @id @default(cuid())
+  name             String
+  orgName          String
+  area             String?
+  shortDescription String?
+  infoUrl          String?
+
+  // Pay fields mirror formatPay's PayInfo; amounts are integer cents in the original unit.
+  payType           PayType    @default(not_specified)
+  payAmountCents    Int?
+  payMaxAmountCents Int?
+  payPeriod         PayPeriod?
+  payMilestones     Int?
+  payItems          String[]
+  payExtras         String[]
+
+  // Conditions are three-state; unknown shows nothing on cards.
+  conditionsStatus ConditionsStatus @default(unknown)
+  conditionsNote   String?
+  conditionsSource String?
+
+  duration        String? // free text: "8 weeks, up to 300 hours"
+  status          ProgramStatus @default(active) // retire, never hard-delete
+  lastConfirmedAt DateTime?
+  isSample        Boolean       @default(true) // fictional data, labeled "Sample data"
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  reports OutcomeReport[]
+}
+
+model OutcomeReport {
+  id        String  @id @default(cuid())
+  programId String
+  program   Program @relation(fields: [programId], references: [id])
+
+  exitDate        DateTime // when they left the program (UTC)
+  jobWithin90Days JobOutcome   @default(unknown) // unknown answers are excluded from Y, not counted as failures
+  status          ReportStatus @default(pending) // only approved reports count
+  verification    Verification @default(self_reported)
+  reporterId      String? // Clerk user id; null for sample data
+  reviewedAt      DateTime?
+  isSample        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+
+  @@unique([programId, reporterId]) // one report per program per account
+  @@index([programId, status])
+}
