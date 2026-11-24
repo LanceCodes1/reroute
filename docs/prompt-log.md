@@ -43,3 +43,19 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Known and left alone:** 4 moderate `minimatch` findings (GHSA-g3hv-75wg-m249) under `shadcn` → `ts-morph`. Tooling-only; the only npm fix is a breaking `shadcn` downgrade. Revisit when shadcn updates. Re-check the `effect` override when Prisma ships a release that bumps it.
 
 **Deployed:** Live at https://reroute-puce.vercel.app. `DATABASE_URL` is set in Vercel as a sensitive variable for Production and Preview.
+
+## S4 — Set up Vitest (2026-11-24)
+
+**Asked:** Minimal Vitest setup for Next.js 16 + TypeScript with the `@/*` alias; Lance writes the first test.
+
+**Done:**
+- Installed `vitest` 5.1.1. `vitest.config.mts` uses `resolve: { tsconfigPaths: true }` (native Vite) with `environment: "node"` and `include: ["src/**/*.test.ts"]`. Skipped React/jsdom/Testing Library: core logic (`formatPay`, `programOutcomes`, `comparePrograms`) is pure TypeScript. Add them when testing components.
+- Initially installed `vite-tsconfig-paths` (per the Next.js guide), then removed it after Vitest reported native support.
+- `npm install` failed on a peer conflict (Vitest needs `@types/node` ^22 or >=24; project had ^20). Fixed by upgrading `@types/node` to ^24 instead of `--force`.
+- Added `"engines": { "node": "24.x" }` so Vercel matches local Node 24.
+- Scripts: `"test": "vitest run"`, `"test:watch": "vitest"`.
+- Lance wrote `src/lib/__tests__/smoke.test.ts` and watched it go red (deliberately wrong) then green.
+
+**Verified:** `npm test` (1 passed), `npx tsc --noEmit`, and `npm run build` all pass. Audit unchanged: 4 moderate `minimatch` (see S3).
+
+**Not yet verified:** the `@/*` alias inside a test. The smoke test doesn't import through it, so the first real test that uses `@/lib/...` will be the proof.
