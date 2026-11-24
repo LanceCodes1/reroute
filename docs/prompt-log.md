@@ -81,3 +81,27 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Verified:** `npm test` (29 passed: 28 formatPay + smoke), `npx tsc --noEmit`, `npm run build`, and eslint on `src/lib` all pass. The `@/` alias is now proven: the formatPay tests import through `@/lib/formatPay`.
 
 **Research note:** LA programs state pay as hourly wages with hour caps, stipends, wages plus incentives, or no amount at all. Sources disagreed and some looked stale, so no research figures went into the app; sample data stays fictional.
+
+## F1 — Program and OutcomeReport schema + first migration (2026-11-24)
+
+**Asked:** Design the two-table data model (Program, OutcomeReport; Clerk holds accounts, so no User table), commit the schema, then run the first migration.
+
+**Fields decided with Lance (all recommendations chosen):**
+1. **Duration:** one free-text field. No calculation uses it, and programs state length in days, hours, weeks, or months.
+2. **Verification:** one field, three states (`self_reported` / `navigator_verified` / `org_confirmed`), same pattern as conditions. Participants report; orgs upgrade the label.
+3. **Duplicate block now:** `reporterId` (Clerk id, null for sample data) plus `unique(programId, reporterId)`, so week 12 needs no schema change. Postgres treats nulls as distinct, so sample reports aren't blocked.
+4. **Retire, never delete:** `status` active/retired plus `lastConfirmedAt`. The relation defaults to Restrict, so the database refuses to delete a program that has reports.
+5. **Area field included:** browsing needs "where".
+6. **Database enums for all fixed values:** the database rejects typos the same way tests guard code.
+
+**Schema:** Program pay fields mirror formatPay's `PayInfo` (integer cents, original unit). Conditions are three-state. Seven enums: PayType, PayPeriod, ConditionsStatus, ProgramStatus, JobOutcome, ReportStatus, Verification. Index on `OutcomeReport(programId, status)` for the approved-reports lookup. Both tables default `isSample` to true.
+
+**Migration:** `20261124225523_init_program_outcomereport`, run with `npx prisma migrate dev --name init_program_outcomereport`. Additive SQL only (7 enums, 2 tables, 1 unique index, 1 index, 1 foreign key). No reset prompt appeared.
+
+**Direct vs pooled URL:** migrations use `DIRECT_URL` (Neon unpooled) via `prisma7.config.ts`, which falls back to `DATABASE_URL`. The app keeps the pooled `DATABASE_URL` through the `@prisma/adapter-pg` adapter.
+
+**Commits:** schema committed first (`894a7eb`, before any migration, per the cadence rules); migration committed separately.
+
+**Verified:** `npx prisma validate`, `npx tsc --noEmit`, and `npm test` (29 passed) all pass. A read-only count against Neon shows `Program` = 0 and `OutcomeReport` = 0, so both tables exist and are empty.
+
+**Next:** seed fictional sample programs (labeled "Sample data"). Add `DIRECT_URL` to Vercel only if migrations ever run there; the deployed app doesn't need it.
