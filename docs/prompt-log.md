@@ -27,3 +27,19 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Verified:** Type-check. Connection: `SELECT 1` (earlier). Not yet verified: a live query through the singleton and the test suite (no tests exist yet).
 
 **Pending:** Commit and push after Lance's approval.
+
+## S3 prep — Prepare for Vercel deploy (2026-11-23)
+
+**Asked:** Get the empty app ready to deploy to Vercel.
+
+**Done:**
+- `.gitignore` now excludes `.agents/`, `.claude/skills/`, and `skills-lock.json` (local Prisma skill copies).
+- `"postinstall": "prisma generate"` so Vercel (and fresh clones) build the git-ignored client in `src/generated/prisma`. Chosen over putting it in `build` because `tsc`, `next dev`, and Vitest also need the client.
+- `overrides: { effect: "3.22.5" }` fixes the 3 high ReDoS findings (GHSA-7589-6fvf-x4pw). They were one chain: `effect` pinned at 3.20.0 by `@prisma/config` (Prisma CLI config loading, not the runtime client). Rejected `npm audit fix --force`: it would downgrade Prisma to 6.12.0.
+- `turbopack.root` set in `next.config.ts` to silence the stray parent-folder lockfile warning.
+
+**Verified:** `npm audit` shows 0 high; `npx prisma generate`, `npx tsc --noEmit`, and `npm run build` all pass. No test script yet, so `npm test` is skipped.
+
+**Known and left alone:** 4 moderate `minimatch` findings (GHSA-g3hv-75wg-m249) under `shadcn` → `ts-morph`. Tooling-only; the only npm fix is a breaking `shadcn` downgrade. Revisit when shadcn updates. Re-check the `effect` override when Prisma ships a release that bumps it.
+
+**Still to do for S3:** set `DATABASE_URL` in Vercel project settings, deploy, check the live URL.
