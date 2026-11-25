@@ -105,3 +105,31 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Verified:** `npx prisma validate`, `npx tsc --noEmit`, and `npm test` (29 passed) all pass. A read-only count against Neon shows `Program` = 0 and `OutcomeReport` = 0, so both tables exist and are empty.
 
 **Next:** seed fictional sample programs (labeled "Sample data"). Add `DIRECT_URL` to Vercel only if migrations ever run there; the deployed app doesn't need it.
+
+## F3 — programOutcomes (Nov 24, 2026, W11)
+
+**Goal:** Count outcome evidence honestly: X of Y got a job within 90 days of leaving.
+
+**Decisions locked by Lance:**
+- Approved reports only; pending and rejected are ignored completely.
+- Too early (under 90 days since exit, including future dates) never enters Y, even a yes, and is checked before unknown. Exactly 90 days counts.
+- Unknowns are excluded from Y, not counted as failures.
+- Hidden when Y < 3. When hidden, every field except `hidden` is null, so numbers can't leak to the UI or Ari. 0 of 3 is shown.
+- The verification mix and `latestExitDate` cover counted (Y) reports only.
+- `isSample` is ignored (the caller filters). The function uses the `now` parameter, never the clock.
+
+**Built:** `programOutcomes(reports, now)` in `src/lib/programOutcomes.ts`, with named constants `NINETY_DAYS_MS` and `MIN_KNOWN_REPORTS = 3`. Plain local types whose string values match the Prisma enums, so tests never need the database. It does not mutate its input, and input order doesn't matter.
+
+**Verified:** Lance reviewed the 17 test cases and confirmed red (17 failed, 29 passed) before implementation.
+
+**Tests:** 17 written first, red → green, no test changed. Final: 46 passed (17 programOutcomes, 28 formatPay, 1 smoke). `npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass.
+
+**Open (choices the 17 tests don't pin down):**
+- An invalid Date for `exitDate` (or `now`) makes the age comparison false, so the report is treated as matured instead of too early.
+- Duplicate reports are all counted. The input has no `reporterId`, so the function can't dedupe; it relies on the database unique constraint, which doesn't block null `reporterId` sample rows.
+- Reports from mixed programs are not detected; the caller must pass one program's reports.
+- An unexpected runtime value is not rejected: a `verification` outside the three states counts as `org_confirmed`, and a `jobWithin90Days` outside yes/no/unknown counts as a known "no". TypeScript and the database enums prevent this today.
+- When hidden, `tooEarlyCount` is null too, so the UI can't say "N more reports are still too early to count".
+- `latestExitDate` is returned as a new `Date`, not a reference to the input's date.
+
+**Next:** Extra tests for any uncovered choice Lance approves, then F4 seed.
