@@ -175,6 +175,43 @@ describe("programOutcomes: verification and latest exit cover counted reports on
   });
 });
 
+describe("programOutcomes: bad input throws instead of giving silent wrong numbers", () => {
+  const threeOld = () => [report("yes", OLD), report("yes", OLD), report("no", OLD)];
+
+  it("18. throws, naming exitDate, when a report has an invalid exitDate", () => {
+    const bad = { ...report("yes", OLD), exitDate: new Date("nope") };
+    expect(() => programOutcomes([...threeOld(), bad], NOW)).toThrow(/exitDate/);
+  });
+
+  it("19. throws, naming now, when now is an invalid Date", () => {
+    expect(() => programOutcomes(threeOld(), new Date("nope"))).toThrow(/now/);
+  });
+
+  it("20. throws, naming verification, for an unknown verification value", () => {
+    const bad = { ...report("yes", OLD), verification: "bogus" as unknown as Verification };
+    expect(() => programOutcomes([...threeOld(), bad], NOW)).toThrow(/verification/);
+  });
+
+  it("21. throws, naming jobWithin90Days, for an unknown job outcome value", () => {
+    const bad = { ...report("yes", OLD), jobWithin90Days: "maybe" as unknown as JobOutcome };
+    expect(() => programOutcomes([...threeOld(), bad], NOW)).toThrow(/jobWithin90Days/);
+  });
+
+  it("22. throws, naming status, for an unexpected status value", () => {
+    const bad = { ...report("yes", OLD), status: "archived" as unknown as ReportStatus };
+    expect(() => programOutcomes([...threeOld(), bad], NOW)).toThrow(/status/);
+  });
+
+  it("23. throws for a bad value on a pending report, even though it would not count", () => {
+    const bad = { ...report("yes", OLD, "pending"), verification: "bogus" as unknown as Verification };
+    expect(() => programOutcomes([...threeOld(), bad], NOW)).toThrow(/verification/);
+  });
+
+  it("24. throws, naming now, for an invalid now even with no reports", () => {
+    expect(() => programOutcomes([], new Date("nope"))).toThrow(/now/);
+  });
+});
+
 describe("programOutcomes: purity", () => {
   it("16. gives the same result for shuffled input and does not mutate the input", () => {
     const reports = [

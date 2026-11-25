@@ -30,7 +30,44 @@ export interface OutcomeSummary {
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 const MIN_KNOWN_REPORTS = 3;
 
+const STATUSES: ReadonlySet<string> = new Set<ReportStatus>(["pending", "approved", "rejected"]);
+const JOB_OUTCOMES: ReadonlySet<string> = new Set<JobOutcome>(["yes", "no", "unknown"]);
+const VERIFICATIONS: ReadonlySet<string> = new Set<Verification>([
+  "self_reported",
+  "navigator_verified",
+  "org_confirmed",
+]);
+
+function isValidDate(value: unknown): boolean {
+  return value instanceof Date && Number.isFinite(value.getTime());
+}
+
+// Bad input throws: a loud error is better than a silently wrong number.
+function validateInput(reports: OutcomeInput[], now: Date): void {
+  if (!isValidDate(now)) throw new Error("programOutcomes: now is not a valid Date");
+
+  // Every report is checked before the status filter, so bad rows are caught even if they would not count.
+  reports.forEach((report, i) => {
+    if (!isValidDate(report.exitDate)) {
+      throw new Error(`programOutcomes: report ${i} has an invalid exitDate`);
+    }
+    if (!STATUSES.has(report.status)) {
+      throw new Error(`programOutcomes: report ${i} has an unexpected status "${report.status}"`);
+    }
+    if (!JOB_OUTCOMES.has(report.jobWithin90Days)) {
+      throw new Error(
+        `programOutcomes: report ${i} has an unexpected jobWithin90Days "${report.jobWithin90Days}"`,
+      );
+    }
+    if (!VERIFICATIONS.has(report.verification)) {
+      throw new Error(`programOutcomes: report ${i} has an unexpected verification "${report.verification}"`);
+    }
+  });
+}
+
 export function programOutcomes(reports: OutcomeInput[], now: Date): OutcomeSummary {
+  validateInput(reports, now);
+
   let jobCount = 0;
   let knownCount = 0;
   let unknownCount = 0;

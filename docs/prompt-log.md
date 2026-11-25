@@ -122,14 +122,12 @@ Milestone entries: what was asked, what was done, and what was verified.
 
 **Verified:** Lance reviewed the 17 test cases and confirmed red (17 failed, 29 passed) before implementation.
 
-**Tests:** 17 written first, red → green, no test changed. Final: 46 passed (17 programOutcomes, 28 formatPay, 1 smoke). `npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass.
+**Tests:** 17 written first, red → green, no test changed (committed as `eb64841`, 46 passed). Hardening added 7 more (18–24), red first (7 failed, 46 passed), then green with no test changed. Final: 53 passed (24 programOutcomes, 28 formatPay, 1 smoke). `npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass.
 
-**Open (choices the 17 tests don't pin down):**
-- An invalid Date for `exitDate` (or `now`) makes the age comparison false, so the report is treated as matured instead of too early.
-- Duplicate reports are all counted. The input has no `reporterId`, so the function can't dedupe; it relies on the database unique constraint, which doesn't block null `reporterId` sample rows.
-- Reports from mixed programs are not detected; the caller must pass one program's reports.
-- An unexpected runtime value is not rejected: a `verification` outside the three states counts as `org_confirmed`, and a `jobWithin90Days` outside yes/no/unknown counts as a known "no". TypeScript and the database enums prevent this today.
-- When hidden, `tooEarlyCount` is null too, so the UI can't say "N more reports are still too early to count".
-- `latestExitDate` is returned as a new `Date`, not a reference to the input's date.
+**Decided (hardening):** Invalid dates and unexpected enum values (status, verification, jobWithin90Days) throw, and so does an invalid `exitDate` or `now`. `now` is checked first, even with no reports. Every report is validated before the status filter, so a bad row is caught even if it is pending or rejected. Silent wrong numbers are worse than a loud error. Each message names the bad field. Tests 18–24 cover this.
 
-**Next:** Extra tests for any uncovered choice Lance approves, then F4 seed.
+**Accepted as-is:** duplicates (database constraint plus a clean seed), mixed programs (the caller filters), `tooEarlyCount` null when hidden (revisit at F6 if needed), and a new `Date` returned for `latestExitDate`.
+
+**Next:** F4 seed.
+
+**Revisit:** F6: if programOutcomes throws, show a clear error state for that program instead of crashing the page.
