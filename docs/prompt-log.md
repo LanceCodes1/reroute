@@ -131,3 +131,25 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Next:** F4 seed.
 
 **Revisit:** F6: if programOutcomes throws, show a clear error state for that program instead of crashing the page.
+
+## F4 — Sample seed data (Nov 24, 2026, W11)
+
+**Goal:** 10 fictional sample programs and 84 reports that show every pay type and every outcome state, so the demo can compare a flashy trap (CashOut Crew, 2 of 11) against strong paths (Gold Coast Solar, 8 of 10; Big Rig, 6 of 7, with no cash).
+
+**Decisions (Lance):**
+- 10 programs with flyer-style hooks and pay ranges real LA flyers use.
+- Made-up orgs in real LA areas (invented `orgName` values, kept by Lance).
+- Fixed UTC dates, spread across 2026-02-01 to 2026-07-31 (matured) and 2026-10-15 to 2026-11-15 (too early).
+- The Dec 18 test is a stability check: the too-early exits are still under 90 days old on Dec 18, so demo numbers don't shift before demo day.
+- Upsert by fixed id (programs first, then reports), no deletes. The seed runs on the direct URL (`DIRECT_URL`), like migrations.
+- Seed data is tested without the database.
+
+**Built:** `src/data/seedData.ts` (10 programs, 84 reports, typed from the generated Prisma models), `prisma/seed.ts`, and `migrations.seed: "tsx prisma/seed.ts"` in `prisma7.config.ts`. Added `tsx` as a dev dependency. Run on demand with `npx prisma db seed`; Prisma 7 does not seed automatically after migrations.
+
+**Verified:** 25 seed tests red → green, no test changed; the 10 pay strings were reviewed by Lance; read-only database counts after seeding: 10 programs, 84 reports, all `isSample`. `npx tsc --noEmit`, `npm run lint`, and `npm run build` pass; 78 tests pass.
+
+**Caution:** Don't re-run the seed after week-12 editing exists: it resets sample rows to the seed values. Rows removed from the seed data must be deleted from the database by hand.
+
+**Revisit at F6:** show CashOut Crew's conditions note ("Top rate requires perfect weekly attendance") on the detail page.
+
+**Next:** S5 spike (one outcome count from the database).
