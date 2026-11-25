@@ -153,3 +153,17 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Revisit at F6:** show CashOut Crew's conditions note ("Top rate requires perfect weekly attendance") on the detail page.
 
 **Next:** S5 spike (one outcome count from the database).
+
+## S5 — Spike: live outcome count from the database (Nov 24, 2026, W11)
+
+**Goal:** Prove the full path works in production: database → `programOutcomes` → page.
+
+**Decisions:**
+- A temporary `/spike` page (`src/app/spike/page.tsx`), deleted at F5.
+- Request-time rendering. The project has `cacheComponents` on, where `export const dynamic = "force-dynamic"` is removed (per the bundled Next.js migration guide). Instead the page awaits `connection()` inside a `<Suspense>` boundary, so the build never touches the database or the clock (`new Date()` can't run at prerender). The route shows as ◐ (partial prerender), not ƒ.
+- Uses the `prisma` singleton to load `prog-gold-coast-solar` with its reports, maps rows to `OutcomeInput`, and calls `programOutcomes(reports, new Date())`. The page only prints what the function returns.
+- No new tests (throwaway page).
+
+**Verified locally:** `npx tsc --noEmit`, `npm run lint`, `npm test` (78 passed), and `npm run build` pass; `/spike` builds as ◐, not ○. `npm run dev`: `localhost:3000/spike` returned 200 and showed "Gold Coast Solar Fellowship", "8 of 10 reported a job within 90 days of leaving", and "Sample data, not real opportunities." The dev log showed no warnings.
+
+**Still to verify:** the live page at `/spike` on Vercel after the deploy.
