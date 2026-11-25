@@ -166,4 +166,4 @@ Milestone entries: what was asked, what was done, and what was verified.
 
 **Verified locally:** `npx tsc --noEmit`, `npm run lint`, `npm test` (78 passed), and `npm run build` pass; `/spike` builds as ◐, not ○. `npm run dev`: `localhost:3000/spike` returned 200 and showed "Gold Coast Solar Fellowship", "8 of 10 reported a job within 90 days of leaving", and "Sample data, not real opportunities." The dev log showed no warnings.
 
-**Still to verify:** the live page at `/spike` on Vercel after the deploy.
+**Verified live on Vercel:** `https://reroute-puce.vercel.app/spike` shows 8 of 10 (confirmed by Lance).
