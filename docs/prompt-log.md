@@ -167,3 +167,28 @@ Milestone entries: what was asked, what was done, and what was verified.
 **Verified locally:** `npx tsc --noEmit`, `npm run lint`, `npm test` (78 passed), and `npm run build` pass; `/spike` builds as ◐, not ○. `npm run dev`: `localhost:3000/spike` returned 200 and showed "Gold Coast Solar Fellowship", "8 of 10 reported a job within 90 days of leaving", and "Sample data, not real opportunities." The dev log showed no warnings.
 
 **Verified live on Vercel:** `https://reroute-puce.vercel.app/spike` shows 8 of 10 (confirmed by Lance).
+
+## C1 — comparePrograms (Nov 24, 2026, W11)
+
+**Goal:** Line up 2–3 programs row by row (pay first) so the core decision is visible, without ranking them.
+
+**Decisions (Lance):**
+- Rows in this order: pay → outcome → verification → duration → area. Row keys only; the UI owns the display labels.
+- No new "thin" cutoff: hidden comes from `programOutcomes`, and `anyHidden` flags the comparison.
+- Fewer than 2, more than 3, or a duplicate id throws with a clear message.
+- Columns stay in input order. No score, rank, "best", or percentage anywhere.
+- Status and `isSample` are ignored (the caller filters).
+- Missing or blank duration and area show "Not listed"; pay keeps `formatPay`'s "Not specified".
+- `programOutcomes` errors propagate (bad data stays loud). Input is not mutated.
+
+**Built:** `comparePrograms(programs, now)` in `src/lib/comparePrograms.ts`. It reuses `formatPay` and `programOutcomes`, so every number and pay string comes from tested code. `CompareInput` is a type-only pick of the Prisma `Program` fields plus `reports`.
+
+**Verified:** Lance reviewed the 15 test cases; red was 15 failed / 78 passed before implementation. Test 15 locks the demo trio (CashOut Crew 2 of 11, Gold Coast Solar 8 of 10, Big Rig 6 of 7). Green: 93 passed (15 new), no test changed. `npx tsc --noEmit`, `npm run lint`, and `npm run build` pass.
+
+**Note:** Test 12 scans the whole result, including program names, so a real program named with "best", "rank", or "score" would need that test revisited (a logged reason is required to change it).
+
+**Accepted as-is:** trimmed duration and area; an empty string shows "Not listed"; the count guard runs before the duplicate guard; headers carry id, name, and orgName only; error wording is unpinned beyond a few fragments; an invalid `now` throws via `programOutcomes`.
+
+**Revisit at C2:** if any program has bad data, the whole comparison throws, so the compare screen needs a clear error state instead of a crash.
+
+**Next:** M1 visual direction, then F5 home page.
